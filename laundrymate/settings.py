@@ -71,7 +71,21 @@ WSGI_APPLICATION = 'laundrymate.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-
+DATABASES = {
+    'default': {
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE'    : 'sql_server.pyodbc',
+        'NAME'      : 'johansdb',
+        'USER'      : 'johansdb@atpgiy7byj',
+        'PASSWORD'  : 'Wash&dry123',
+        'HOST'      : 'atpgiy7byj.database.windows.net',
+        'PORT'      : '1433',
+        'OPTIONS'   : {
+            'driver'    : 'ODBC Driver 13 for SQL Server',
+        },
+    },
+}
 
 
 # Password validation
