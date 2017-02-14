@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Landing Page - Start Bootstrap Theme</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static 'website/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'website/css/landing-page.css' %}" rel="stylesheet">
+    <link href="{% static 'website/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <!-- Header -->
+    <a name="about"></a>
+    <div class="intro-header">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="intro-message">
+                        <h1>Laundry Mate Analytics</h1>
+                        <h3>A Template by Start Bootstrap</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section-a">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Users by location</h2>
+                    <h4> Country: &nbsp <span id="report"></span> </h4>
+                    <h4> Total: &nbsp  <span id="total_users"></span> </h4>                    
+                </div>
+                <div class="col-lg-7">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section-b">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Laundry chart</h2>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="lead">Country:</p>
+                            <div class="dropdown">
+                                <div class="btn-group">
+                                    <button class="btn btn-mini">
+                                        {% if selected_country %}
+                                            {{selected_country}}
+                                        {% else %}
+                                            - 
+                                        {% endif %}
+                                    </button>
+                                        <button class="btn btn-mini dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <form action="" method="get">
+                                            {% csrf_token %}
+                                            {% for each_country in all_country %}
+                                                 <button name="country" value="{{each_country}}">{{each_country}}</button>
+                                            {% endfor %}
+                                        </form>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <p class="lead">State: </p>
+                            <div class="dropdown">
+                                <div class="btn-group">
+                                    <button class="btn btn-mini">
+                                        {% if selected_city %}
+                                            {{selected_city}}
+                                        {% else %}
+                                            - 
+                                        {% endif %}
+                                    </button>
+                                        <button class="btn btn-mini dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <form action="" method="get">
+                                            {% for each_city in all_city %}
+                                                 <button name="city" value="{{selected_country}}-{{each_city}}">{{each_city}}</button>
+                                            {% endfor %}
+                                        </form>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7 col-sm-6">
+                    <canvas id="graph-time" style="width:100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <ul class="list-inline">
+                        <li>
+                            <a href="#">Home</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li>
+                            <a href="#about">About</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li>
+                            <a href="#services">Services</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li>
+                            <a href="#contact">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'website/js/jquery.js' %}"></script>
+    <script src="{% static 'website/js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'website/js/d3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'website/js/topojson.v1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'website/js/chartjs-cdn.min.js' %}"></script>
+    <script type="text/javascript">
+     $(document).ready(function(){
+        var h = 450,
+            w = 960;
+        // set-up unit projection and path
+        var projection = d3.geoMercator()
+                .scale(1)
+                .translate([0, 0]);
+        var path = d3.geoPath()
+                .projection(projection);
+        // set-up svg canvas
+        var svg = d3.select("#map").append("svg")
+                .attr("height", h)
+                .attr("width", w);
+        var color = d3.scaleLinear()
+                .range(["blue", "red"]);
+        var showValue= "gdp";
+        var record=[];
+        var linear = d3.scaleLinear()
+                .range(["blue", "red"]);
+        function addRecord(d){
+            d[showValue]=+d[showValue];
+            var obj = {key: d.countries, value: d[showValue]};
+            record.push(obj);
+            return d;
+        }
+        d3.csv("https://gist.githubusercontent.com/kaijiezhou/b0a1959aad60346f806a/raw/80b02e59b380ca5f86a841fb6066bc9cd147ff51/UN.csv", addRecord, function(error,data){
+            color.domain(d3.extent(data, function(d){
+                return d[showValue];
+            }));
+            linear.domain(d3.extent(data, function(d){
+                return d[showValue];
+            }));
+        });
+        //https://github.com/johan/world.geo.json
+        d3.json("{% static 'website/assets/countries.geo.json' %}", function(error, data) {
+            d3.csv("{% static 'website/assets/id.csv' %}", function(error, csv) {
+                var world = data.features;
+                csv.forEach(function(d, i) {
+                    world.forEach(function(e, j) {
+                        if (d.id === e.id) {
+                            e.name = d.name
+                        }
+                    })
+                })
+                // calculate bounds, scale and transform
+                // see http://stackoverflow.com/questions/14492284/center-a-map-in-d3-given-a-geojson-object
+                var b = path.bounds(data),
+                        s = .95 / Math.max((b[1][0] - b[0][0]) / w, (b[1][1] - b[0][1]) / h),
+                        t = [(w - s * (b[1][0] + b[0][0])) / 2, (h - s * (b[1][1] + b[0][1])) / 2];
+                projection.scale(s)
+                        .translate(t);
+                svg.selectAll("path")
+                        .data(world).enter()
+                        .append("path")
+                        .style("fill", getColor)
+                        .style("stroke", "grey")
+                        .style("stroke-width", "1px")
+                        .attr("d", path)
+                        .on("mouseover", function(d, i) {
+                            reporter(d);
+                        });
+            });
+
+         function reporter(x){
+            // console.log(x)
+            d3.select("#report").text(function() {
+                return x.name;
+            });
+            d3.select("#total_users").text(function() {
+                if(x.name == 'China') return 200;
+                else if(x.name == 'Japan') return 100;
+            });
+        };
+
+         function getColor(data){
+            var value=-1;
+            record.forEach(function(d){
+                if(data.name === d.key){
+                    value = d.value;
+                    return;
+                }
+            });
+            if(value==-1){
+                return "none";
+            }
+            return color(value);
+            };    
+        });
+    });
+
+    $(document).ready(function(){
+        var display_full_view       = function(id, data, time){
+            // Updates panel reading and plots graph
+            svg_id                  = "graph-" + id;
+            plot_graph(svg_id, data, time);  
+        }
+
+        var plot_graph          = function(svg_id, data, time){        
+            var ctx             = document.getElementById(svg_id).getContext("2d");
+            // var time_HH_MM      = get_HH_MM_from_UTC(time);
+
+            var new_chart       = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: time,
+                    datasets: [{
+                        label: "Time",
+                        backgroundColor: 'rgba(255,111,105,0.7)',
+                        pointBackgroundColor: 'rgba(255,0,0,1)',
+                        data: data,
+                        lineTension: 0,
+                    }],
+                },
+                options:{
+                    scales:{
+                        yAxes:[{
+                            ticks:{
+                                max:1,
+                                min:30,
+                                stepSize:2,
+                            }
+                        }]
+                    }
+                }
+            })
+        }
+
+        function get_HH_MM_from_UTC(time){
+            var utc_parser              = d3.time.format.utc("%Y-%m-%dT%H:%M:%SZ").parse;   
+            var utc_parser_withMillis   = d3.time.format.utc("%Y-%m-%dT%H:%M:%S.%LZ").parse;        // Data from Django is UTC timing     
+            var formatter               = d3.time.format("%H:%M");
+            var time_HH_MM  = time.map(function(each_time){
+                utc         = utc_parser_withMillis(each_time);
+                if(!utc){
+                    utc       = utc_parser(each_time);
+                }
+                return formatter(utc);
+            });
+            return time_HH_MM;
+        }
+        if({{no_of_users}} != 0){
+            display_full_view("time", {{no_of_users}}, ['09:00','11:00','13:00','15:00','17:00','19:00']);
+        }
+    });  
+    </script>
+    </body>
+</html>
