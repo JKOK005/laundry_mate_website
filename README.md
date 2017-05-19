@@ -16,4 +16,4 @@ Laundry mate consists of:
 2. Web dashboard, in Django, HTML/CSS/JQuery, for visualization of user washing patters across countries
 3. Backend machine learning and data storage in Microsoft Azure
 
-In this repository, you will only find **items 2&3**. 
+In this repository, you will only find **items 2**. 
